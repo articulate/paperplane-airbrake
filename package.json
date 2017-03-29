@@ -1,0 +1,27 @@
+{
+  "name": "paperplane-airbrake",
+  "version": "0.0.0",
+  "description": "An airbrake wrapper for paperplane",
+  "main": "index.js",
+  "repository": "git@github.com:articulate/paperplane-airbrake.git",
+  "author": "articulate",
+  "license": "MIT",
+  "engines": {
+    "node": ">=6",
+    "yarn": ">=0.21"
+  },
+  "scripts": {
+    "hint": "jshint --reporter=node_modules/jshint-stylish .",
+    "test": "mocha --reporter dot"
+  },
+  "dependencies": {
+    "crocks": "^0.4.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "jshint": "^2.9.4",
+    "jshint-stylish": "^2.2.1",
+    "mocha": "^3.2.0",
+    "prop-factory": "^1.0.0"
+  }
+}
