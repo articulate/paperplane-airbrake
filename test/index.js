@@ -41,31 +41,31 @@ describe('paperplane-airbrake', function() {
 
     it('rejects with the error', function() {
       expect(err()).to.exist
-    });
+    })
 
     it('adds the action', function() {
       expect(err().action).to.equal('/users/123')
-    });
+    })
 
     it('adds paperplane as the component', function() {
       expect(err().component).to.equal('paperplane')
-    });
+    })
 
     it('adds the httpMethod', function() {
       expect(err().httpMethod).to.equal('GET')
-    });
+    })
 
     it('adds the params', function() {
       expect(err().params).to.eql({ id: 123 })
-    });
+    })
 
     it('adds the ua (user agent)', function() {
       expect(err().ua).to.equal('Chrome')
-    });
+    })
 
     it('adds the url', function() {
       expect(err().url).to.equal('https://myapp.com/users/123?token=abc')
-    });
+    })
   })
 
   describe('when app succeeds', function() {
@@ -76,11 +76,11 @@ describe('paperplane-airbrake', function() {
 
     beforeEach(function() {
       return server(req).catch(err)
-    });
+    })
 
     it('does not notify airbrake', function() {
       expect(airbrake.notify.calls.length).to.equal(0)
       expect(err()).to.be.undefined
-    });
+    })
   })
 })
