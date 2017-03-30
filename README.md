@@ -28,10 +28,8 @@ const airbrake = Airbrake.createClient(
   process.env.APP_ENV
 )
 
-airbrake.addFilter(notice => {
-  const { statusCode } = notice.errors[0]
-  return statusCode && statusCode >= 500 && notice
-})
+airbrake.addFilter(notice =>
+  notice.errors[0].message !== 'Not Found' && notice)
 
 const app = () => { throw new Error('uh oh') }
 
