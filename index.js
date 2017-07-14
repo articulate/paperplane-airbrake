@@ -1,27 +1,23 @@
 const { curryN }         = require('crocks')
 const { flip, is, when } = require('ramda')
 
-const addReqData = (err, req) =>
-  when(is(Error), flip(Object.assign)({
+const addReqData = (req, err) =>
+  Object.assign(err, {
     action     : req.pathname,
     component  : 'paperplane',
     httpMethod : req.method,
     params     : req.params,
     ua         : req.headers['user-agent'],
     url        : req.protocol + '://' + req.headers.host + req.url
-  }))(err)
+  })
 
 const handle = curryN(3, (airbrake, req, err) => {
-  const error = addReqData(err, req)
-
-  airbrake.notify(error, when(is(Error), e => {
-    const notifyErr = addReqData(e, req)
+  airbrake.notify(addReqData(req, err), when(is(Error), notifyErr => {
     notifyErr.data = { err }
-
-    airbrake.notify(notifyErr, when(is(Error), console.error))
+    airbrake.notify(addReqData(notifyErr, req), when(is(Error), console.error))
   }))
 
-  return Promise.reject(error)
+  return Promise.reject(err)
 })
 
 module.exports = curryN(2, (airbrake, app) => req =>
