@@ -360,6 +360,10 @@ prop-factory@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/prop-factory/-/prop-factory-1.0.0.tgz#1a1f953b10be675b5524f2273e38dfba18151ae6"
 
+ramda@^0.24.1:
+  version "0.24.1"
+  resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.24.1.tgz#c3b7755197f35b8dc3502228262c4c91ddb6b857"
+
 readable-stream@1.1:
   version "1.1.13"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-1.1.13.tgz#f6eef764f514c89e2b9e23146a75ba106756d23e"

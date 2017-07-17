@@ -1,13 +1,22 @@
-const { curryN } = require('crocks')
+const { curryN }   = require('crocks')
+const { is, when } = require('ramda')
+
+const addReqData = (req, err) =>
+  Object.assign(err, {
+    action     : req.pathname,
+    component  : 'paperplane',
+    httpMethod : req.method,
+    params     : req.params,
+    ua         : req.headers['user-agent'],
+    url        : req.protocol + '://' + req.headers.host + req.url
+  })
 
 const handle = curryN(3, (airbrake, req, err) => {
-  err.action     = req.pathname
-  err.component  = 'paperplane'
-  err.httpMethod = req.method
-  err.params     = req.params
-  err.ua         = req.headers['user-agent']
-  err.url        = req.protocol + '://' + req.headers.host + req.url
-  airbrake.notify(err)
+  airbrake.notify(addReqData(req, err), when(is(Error), notifyErr => {
+    notifyErr.data = { err }
+    airbrake.notify(addReqData(req, notifyErr), when(is(Error), console.error))
+  }))
+
   return Promise.reject(err)
 })
 

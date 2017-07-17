@@ -15,7 +15,8 @@
     "test": "mocha --reporter dot"
   },
   "dependencies": {
-    "crocks": "^0.4.1"
+    "crocks": "^0.4.1",
+    "ramda": "^0.24.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",
