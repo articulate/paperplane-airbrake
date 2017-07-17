@@ -1,5 +1,5 @@
-const { curryN }         = require('crocks')
-const { flip, is, when } = require('ramda')
+const { curryN }   = require('crocks')
+const { is, when } = require('ramda')
 
 const addReqData = (req, err) =>
   Object.assign(err, {
