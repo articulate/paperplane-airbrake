@@ -14,7 +14,7 @@ const addReqData = (req, err) =>
 const handle = curryN(3, (airbrake, req, err) => {
   airbrake.notify(addReqData(req, err), when(is(Error), notifyErr => {
     notifyErr.data = { err }
-    airbrake.notify(addReqData(notifyErr, req), when(is(Error), console.error))
+    airbrake.notify(addReqData(req, notifyErr), when(is(Error), console.error))
   }))
 
   return Promise.reject(err)
