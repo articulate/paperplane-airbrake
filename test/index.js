@@ -1,6 +1,7 @@
 const { constant } = require('crocks')
 const { expect }   = require('chai')
 const property     = require('prop-factory')
+const { redirect } = require('paperplane')
 
 const handler = require('..')
 const spy     = require('./lib/spy')
@@ -81,6 +82,22 @@ describe('paperplane-airbrake', function() {
     it('does not notify airbrake', function() {
       expect(airbrake.notify.calls.length).to.equal(0)
       expect(err()).to.be.undefined
+    })
+  })
+
+  describe('when rejection is a response and not an error', function() {
+    const app = () => Promise.reject(redirect('/elsewhere'))
+
+    const res    = property(),
+          server = handler(airbrake, app)
+
+    beforeEach(function() {
+      return server(req).catch(res)
+    })
+
+    it('does not notify airbrake', function() {
+      expect(airbrake.notify.calls.length).to.equal(0)
+      expect(res().statusCode).to.equal(302)
     })
   })
 })
