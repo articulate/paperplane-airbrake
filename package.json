@@ -23,6 +23,7 @@
     "jshint": "^2.9.4",
     "jshint-stylish": "^2.2.1",
     "mocha": "^3.2.0",
+    "paperplane": "^1.0.4",
     "prop-factory": "^1.0.0"
   }
 }
