@@ -25,7 +25,7 @@ const http      = require('http')
 const airbrake = Airbrake.createClient(
   process.env.AIRBRAKE_PROJECT_ID,
   process.env.AIRBRAKE_API_KEY,
-  process.env.APP_ENV
+  process.env.SERVICE_ENV
 )
 
 airbrake.addFilter(notice =>
