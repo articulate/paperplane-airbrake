@@ -1,4 +1,3 @@
-const { always }   = require('ramda')
 const { expect }   = require('chai')
 const property     = require('prop-factory')
 const { redirect } = require('paperplane')
