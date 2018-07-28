@@ -1,13 +1,13 @@
-const { constant } = require('crocks')
+const { always }   = require('ramda')
 const { expect }   = require('chai')
 const property     = require('prop-factory')
 const { redirect } = require('paperplane')
+const spy          = require('@articulate/spy')
 
-const handler = require('..')
-const spy     = require('./lib/spy')
-
-describe('paperplane-airbrake', function() {
+describe('paperplane-airbrake', () => {
   const airbrake = { notify: spy() }
+
+  const cry = require('..')(airbrake)
 
   const req = {
     headers: {
@@ -21,81 +21,61 @@ describe('paperplane-airbrake', function() {
     url: '/users/123?token=abc'
   }
 
-  beforeEach(function() {
+  beforeEach(() =>
     airbrake.notify.reset()
-  })
+  )
 
-  describe('when app errors', function() {
-    const app = () => { throw new Error('bad') }
+  describe('when app errors', () => {
+    const bad = Object.assign(new Error('bad'), { req })
+    const err = property()
 
-    const err    = property(),
-          server = handler(airbrake, app)
+    beforeEach(() =>
+      cry(bad).catch(err)
+    )
 
-    beforeEach(function() {
-      return server(req).catch(err)
-    })
-
-    it('notifies airbrake', function() {
+    it('notifies airbrake', () => {
       expect(airbrake.notify.calls.length).to.equal(1)
-      expect(airbrake.notify.calls[0]).to.equal(err())
+      expect(airbrake.notify.calls[0][0]).to.equal(err())
     })
 
-    it('rejects with the error', function() {
+    it('rejects with the error', () =>
       expect(err()).to.exist
-    })
+    )
 
-    it('adds the action', function() {
+    it('adds the action', () =>
       expect(err().action).to.equal('/users/123')
-    })
+    )
 
-    it('adds paperplane as the component', function() {
+    it('adds paperplane as the component', () =>
       expect(err().component).to.equal('paperplane')
-    })
+    )
 
-    it('adds the httpMethod', function() {
+    it('adds the httpMethod', () =>
       expect(err().httpMethod).to.equal('GET')
-    })
+    )
 
-    it('adds the params', function() {
+    it('adds the params', () =>
       expect(err().params).to.eql({ id: 123 })
-    })
+    )
 
-    it('adds the ua (user agent)', function() {
+    it('adds the ua (user agent)', () =>
       expect(err().ua).to.equal('Chrome')
-    })
+    )
 
-    it('adds the url', function() {
+    it('adds the url', () =>
       expect(err().url).to.equal('https://myapp.com/users/123?token=abc')
-    })
+    )
   })
 
-  describe('when app succeeds', function() {
-    const app = constant({ statusCode: 200 })
+  describe('when rejection is a response and not an error', () => {
+    const notAnError = redirect('/elsewhere')
+    const res = property()
 
-    const err    = property(),
-          server = handler(airbrake, app)
+    beforeEach(() =>
+      cry(notAnError).catch(res)
+    )
 
-    beforeEach(function() {
-      return server(req).catch(err)
-    })
-
-    it('does not notify airbrake', function() {
-      expect(airbrake.notify.calls.length).to.equal(0)
-      expect(err()).to.be.undefined
-    })
-  })
-
-  describe('when rejection is a response and not an error', function() {
-    const app = () => Promise.reject(redirect('/elsewhere'))
-
-    const res    = property(),
-          server = handler(airbrake, app)
-
-    beforeEach(function() {
-      return server(req).catch(res)
-    })
-
-    it('does not notify airbrake', function() {
+    it('does not notify airbrake', () => {
       expect(airbrake.notify.calls.length).to.equal(0)
       expect(res().statusCode).to.equal(302)
     })

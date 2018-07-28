@@ -7,23 +7,21 @@
   "author": "articulate",
   "license": "MIT",
   "engines": {
-    "node": ">=6",
-    "yarn": ">=0.21"
+    "node": ">=6"
   },
   "scripts": {
-    "hint": "jshint --reporter=node_modules/jshint-stylish .",
+    "lint": "eslint .",
     "test": "mocha --reporter dot"
   },
   "dependencies": {
-    "crocks": "^0.4.1",
-    "ramda": "^0.24.1"
+    "ramda": "^0.25.0"
   },
   "devDependencies": {
+    "@articulate/spy": "^0.0.1",
     "chai": "^3.5.0",
-    "jshint": "^2.9.4",
-    "jshint-stylish": "^2.2.1",
+    "eslint": "^5.2.0",
     "mocha": "^3.2.0",
-    "paperplane": "^1.0.4",
+    "paperplane": "^1.2.2",
     "prop-factory": "^1.0.0"
   }
 }
