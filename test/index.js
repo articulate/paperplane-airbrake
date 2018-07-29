@@ -100,6 +100,9 @@ describe('paperplane-airbrake', () => {
     const cry = require('..')(airbrake)
     const err = property()
 
+    const airbrakeErr =
+      partial(path(['calls', 1, 0]), [ notified ])
+
     before(() => {
       error = console.error
       console.error = spy()
@@ -119,11 +122,12 @@ describe('paperplane-airbrake', () => {
 
     it('re-notifies airbrake with the new error', () => {
       expect(notified.calls.length).to.equal(2)
-      expect(notified.calls[1][0].message).to.equal('bad request')
+      expect(airbrakeErr().message).to.equal('bad request')
     })
 
-    const airbrakeErr =
-      partial(path(['calls', 1, 0]), [ notified ])
+    it('includes the original error with the new one', () =>
+      expect(airbrakeErr().data.err).to.equal(err())
+    )
 
     itAddsRequestDetailsTo(airbrakeErr)
 
