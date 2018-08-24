@@ -1,5 +1,4 @@
-const { curryN }   = require('crocks')
-const { is, when } = require('ramda')
+const { curry, is, when } = require('ramda')
 
 const addReqData = (req, err) =>
   Object.assign(err, {
@@ -11,17 +10,18 @@ const addReqData = (req, err) =>
     url        : req.protocol + '://' + req.headers.host + req.url
   })
 
-const handle = curryN(3, (airbrake, req, err) => {
+const cry = (airbrake, err) => {
   if (is(Error, err)) {
-    airbrake.notify(addReqData(req, err), when(is(Error), notifyErr => {
+    addReqData(err.req, err)
+
+    airbrake.notify(err, when(is(Error), notifyErr => {
       notifyErr.data = { err }
-      airbrake.notify(addReqData(req, notifyErr), when(is(Error), console.error))
+      addReqData(err.req, notifyErr)
+      airbrake.notify(notifyErr, when(is(Error), console.error))
     }))
   }
 
   return Promise.reject(err)
-})
+}
 
-module.exports = curryN(2, (airbrake, app) => req =>
-  Promise.resolve(req).then(app)
-    .catch(handle(airbrake, req)))
+module.exports = curry(cry)

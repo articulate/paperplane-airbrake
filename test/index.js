@@ -1,13 +1,44 @@
-const { constant } = require('crocks')
 const { expect }   = require('chai')
 const property     = require('prop-factory')
 const { redirect } = require('paperplane')
+const spy          = require('@articulate/spy')
 
-const handler = require('..')
-const spy     = require('./lib/spy')
+const { partial, path } = require('ramda')
 
-describe('paperplane-airbrake', function() {
+const itAddsRequestDetailsTo = err => {
+  it('rejects with the error', () =>
+    expect(err()).to.exist
+  )
+
+  it('adds the action', () =>
+    expect(err().action).to.equal('/users/123')
+  )
+
+  it('adds paperplane as the component', () =>
+    expect(err().component).to.equal('paperplane')
+  )
+
+  it('adds the httpMethod', () =>
+    expect(err().httpMethod).to.equal('GET')
+  )
+
+  it('adds the params', () =>
+    expect(err().params).to.eql({ id: 123 })
+  )
+
+  it('adds the ua (user agent)', () =>
+    expect(err().ua).to.equal('Chrome')
+  )
+
+  it('adds the url', () =>
+    expect(err().url).to.equal('https://myapp.com/users/123?token=abc')
+  )
+}
+
+describe('paperplane-airbrake', () => {
   const airbrake = { notify: spy() }
+
+  const cry = require('..')(airbrake)
 
   const req = {
     headers: {
@@ -21,83 +52,88 @@ describe('paperplane-airbrake', function() {
     url: '/users/123?token=abc'
   }
 
-  beforeEach(function() {
+  beforeEach(() =>
     airbrake.notify.reset()
-  })
+  )
 
-  describe('when app errors', function() {
-    const app = () => { throw new Error('bad') }
+  describe('when app errors', () => {
+    const err = property()
 
-    const err    = property(),
-          server = handler(airbrake, app)
-
-    beforeEach(function() {
-      return server(req).catch(err)
+    beforeEach(() => {
+      const bad = Object.assign(new Error('bad'), { req })
+      return cry(bad).catch(err)
     })
 
-    it('notifies airbrake', function() {
+    it('notifies airbrake', () => {
       expect(airbrake.notify.calls.length).to.equal(1)
-      expect(airbrake.notify.calls[0]).to.equal(err())
+      expect(airbrake.notify.calls[0][0]).to.equal(err())
     })
 
-    it('rejects with the error', function() {
-      expect(err()).to.exist
-    })
-
-    it('adds the action', function() {
-      expect(err().action).to.equal('/users/123')
-    })
-
-    it('adds paperplane as the component', function() {
-      expect(err().component).to.equal('paperplane')
-    })
-
-    it('adds the httpMethod', function() {
-      expect(err().httpMethod).to.equal('GET')
-    })
-
-    it('adds the params', function() {
-      expect(err().params).to.eql({ id: 123 })
-    })
-
-    it('adds the ua (user agent)', function() {
-      expect(err().ua).to.equal('Chrome')
-    })
-
-    it('adds the url', function() {
-      expect(err().url).to.equal('https://myapp.com/users/123?token=abc')
-    })
+    itAddsRequestDetailsTo(err)
   })
 
-  describe('when app succeeds', function() {
-    const app = constant({ statusCode: 200 })
+  describe('when rejection is a response and not an error', () => {
+    const notAnError = redirect('/elsewhere')
+    const res = property()
 
-    const err    = property(),
-          server = handler(airbrake, app)
+    beforeEach(() =>
+      cry(notAnError).catch(res)
+    )
 
-    beforeEach(function() {
-      return server(req).catch(err)
-    })
-
-    it('does not notify airbrake', function() {
-      expect(airbrake.notify.calls.length).to.equal(0)
-      expect(err()).to.be.undefined
-    })
-  })
-
-  describe('when rejection is a response and not an error', function() {
-    const app = () => Promise.reject(redirect('/elsewhere'))
-
-    const res    = property(),
-          server = handler(airbrake, app)
-
-    beforeEach(function() {
-      return server(req).catch(res)
-    })
-
-    it('does not notify airbrake', function() {
+    it('does not notify airbrake', () => {
       expect(airbrake.notify.calls.length).to.equal(0)
       expect(res().statusCode).to.equal(302)
+    })
+  })
+
+  describe('when notifying airbrake returns an error', () => {
+    let error
+    const notified = spy()
+
+    const airbrake = {
+      notify: (err, cb) => {
+        notified(err, cb)
+        cb(new Error('bad request'))
+      }
+    }
+
+    const cry = require('..')(airbrake)
+    const err = property()
+
+    const airbrakeErr =
+      partial(path(['calls', 1, 0]), [ notified ])
+
+    before(() => {
+      error = console.error
+      console.error = spy()
+    })
+
+    beforeEach(() => {
+      console.error.reset()
+      notified.reset()
+
+      const bad = Object.assign(new Error('bad'), { req })
+      return cry(bad).catch(err)
+    })
+
+    after(() =>
+      console.error = error
+    )
+
+    it('re-notifies airbrake with the new error', () => {
+      expect(notified.calls.length).to.equal(2)
+      expect(airbrakeErr().message).to.equal('bad request')
+    })
+
+    it('includes the original error with the new one', () =>
+      expect(airbrakeErr().data.err).to.equal(err())
+    )
+
+    itAddsRequestDetailsTo(airbrakeErr)
+
+    it('logs any further errors', () => {
+      expect(console.error.calls.length).to.equal(1)
+      expect(console.error.calls[0][0].message).to.equal('bad request')
     })
   })
 })
